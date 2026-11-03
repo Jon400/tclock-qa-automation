@@ -1,6 +1,6 @@
 # 001 — Agentic QA foundation: TypeScript + Playwright framework, `.test/`, agent loop
 
-Status: draft
+Status: active
 Owner: Jon400
 Last updated: 2026-10-16
 Backlog item: QA framework foundation + `.test/` + test-flow dev loop
@@ -109,6 +109,9 @@ code before the next box starts (`↳` lines).
 | CI | GitHub Actions, delivered by the CI backlog item. Its workflows call the same npm scripts |
 | Reporting | Allure 3 (npm package, no Java), JUnit XML, Playwright traces on failure |
 | Practices | ESLint + `eslint-plugin-playwright`, Prettier (`semi: false`), strict `tsc`, husky + lint-staged + commitlint, `secretlint`, retries 0, `--repeat-each=3` flake check, quarantine only with owner approval |
+| Toolchain pins | TypeScript stays on 6.0.x, the newest version `typescript-eslint` supports. Prettier formats code and config, not Markdown: the plans and docs keep their hand-made tables |
+| Passkey enrollment | An owner-only tool, `npm run auth:enroll -- --role <role>` (`tools/auth/enroll.ts`), which is the step 6 spike kept as the re-enrollment tool |
+| Lane enforcement | Two layers from one list (`.claude/hooks/lib/role-write-paths.js`): the hook blocks a write before it happens, and the driver compares the working tree before and after each agent stage, which also catches writes made through Bash. The unit tests of `tools/` and the hooks (`tests/unit/{gates,dev-loop,hooks,fixtures}/`) are owner-only, and only they may import `tools/` |
 
 ### The guide's repository layout, applied
 
@@ -498,18 +501,23 @@ References:
   an acceptance criterion; the test planner can only add `risk` cases and propose deferrals.
 
 Workstation (checked 2026-10-16):
-- **Node is 18.16 (end of life).** The hooks are ESM `.js` files, but there is no `package.json`
-  with `"type": "module"`. `enforce-agent-boundaries.js` crashes with "Cannot use import statement
-  outside a module" and exits 1, and Claude Code treats that exit code as non-blocking. **The
-  per-role write guard is not enforcing anything today.** Step 1 fixes this. Node 24 LTS is needed
-  for current Playwright and Allure 3.
-- `gh` is not installed. It is the project's only link to GitHub: repository, intake, issue
-  comments, PRs and CI status.
+- Node 24.20 LTS and GitHub CLI 2.102 are installed (winget). `gh auth login` is still to do.
+- The hooks are ESM `.js` files. Until `package.json` declared `"type": "module"`,
+  `enforce-agent-boundaries.js` crashed with exit 1, which Claude Code treats as non-blocking:
+  the per-role write guard enforced nothing. Step 1 fixed this, and `tests/unit/hooks/` keeps
+  it fixed.
 - Claude Code CLI 2.1.292 is installed. The Agent SDK needs Claude credentials, either an API key
   or the existing Claude Code login.
-- The repository has no commits and no `.gitignore` yet. Everything is untracked on `main`.
+- The repository has no commits yet. The untouched template is staged on the unborn branch
+  `chore/qa-foundation`, waiting for the owner's baseline commit (Q6); the foundation's files
+  are untracked on top of it.
+- The passkey spike succeeded for the QA Operator (`.doc/sut/auth.md`). The QA Employee is
+  not provisioned yet.
 
 ## Open Questions
+
+Answered by the owner on 2026-10-16: every recommendation below is accepted. Q6 is pending:
+the GitHub repository and the baseline commit wait for the owner.
 
 1. **How does the driver run agents?**
    - *Recommended:* the **Claude Agent SDK for TypeScript** (`@anthropic-ai/claude-agent-sdk`,

@@ -1,17 +1,23 @@
 {
-  "$comment": "Guardrail wiring. Claude Code only reads hook and permission config from this file — a hook script in .claude/hooks/ that is not listed here never runs. See AGENTS.md.",
-  "$comment2": "Approves the figma server from .mcp.json by name rather than using enableAllProjectMcpServers, so adding a server to .mcp.json is still a deliberate act. Without this, agents dev-loop.js spawns headlessly would see the server as 'pending approval' and silently run with no Figma tools.",
-  "enabledMcpjsonServers": ["figma", "linear"],
+  "$comment": "Guardrail wiring. Claude Code only reads hook and permission config from this file: a hook script in .claude/hooks/ that is not listed here never runs. See AGENTS.md.",
+  "$comment2": "Approves the Playwright MCP servers from .mcp.json by name rather than using enableAllProjectMcpServers, so adding a server to .mcp.json stays a deliberate act. Without this, the agents tools/dev-loop spawns headlessly would see the servers as 'pending approval' and run without browser tools.",
+  "enabledMcpjsonServers": ["playwright-operator", "playwright-employee"],
   "permissions": {
     "deny": [
       "Read(./.env)",
-      "Read(./frontend/.env)",
-      "Read(./backend/.env)",
+      "Read(./.env.local)",
+      "Read(./.auth/**)",
+      "Edit(./.auth/**)",
+      "Read(**/passkey*.json)",
+      "Edit(**/passkey*.json)",
       "Bash(rm -rf *)",
       "Bash(git push --force*)",
       "Bash(git reset --hard*)",
-      "Bash(*DROP TABLE*)",
-      "Bash(*DROP DATABASE*)"
+      "Bash(gh pr merge*)",
+      "Bash(gh repo delete*)",
+      "Bash(gh release create*)",
+      "WebFetch(domain:tclock.co.il)",
+      "WebFetch(domain:www.tclock.co.il)"
     ]
   },
   "hooks": {
@@ -35,11 +41,20 @@
         ]
       },
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|NotebookEdit|Bash",
         "hooks": [
           {
             "type": "command",
             "command": "node .claude/hooks/enforce-agent-boundaries.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|WebFetch|mcp__playwright-.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/enforce-target-allowlist.js"
           }
         ]
       }

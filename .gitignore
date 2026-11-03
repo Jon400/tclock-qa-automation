@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Secrets: never committed, blocked from agents by .claude/hooks/block-secret-file-access.js
+.env
+.env.*
+!.env.example
+.auth/
+
+# Playwright and Allure output (runs write under .orchestrate/runs/<run-id>/)
+test-results/
+playwright-report/
+blob-report/
+allure-results/
+allure-report/
+
+# Everything the dev loop generates, except the README that documents the folder
+.orchestrate/*
+!.orchestrate/README.md
+
+# Tooling
+*.log
+.eslintcache
+.vitest/

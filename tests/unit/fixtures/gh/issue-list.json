@@ -1,0 +1,5 @@
+[
+  { "number": 31, "title": "[AUTH-UI-003] Log out: expected 401, received 200" },
+  { "number": 35, "title": "[AUTH-UI-0031] Some other case" },
+  { "number": 36, "title": "Mentions AUTH-UI-003 but is not its bug" }
+]

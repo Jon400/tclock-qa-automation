@@ -1,0 +1,20 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "isolated": true,
+    "launchOptions": { "headless": true },
+    "contextOptions": {
+      "locale": "he-IL",
+      "timezoneId": "Asia/Jerusalem",
+      "viewport": { "width": 1280, "height": 800 }
+    },
+    "initScript": ["pin-ui-preferences.js"]
+  },
+  "network": {
+    "allowedOrigins": ["https://dev.tclock.co.il"]
+  },
+  "capabilities": ["core"],
+  "codegen": "none",
+  "saveSession": false,
+  "outputDir": ".orchestrate/explore"
+}

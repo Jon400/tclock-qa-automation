@@ -1,0 +1,21 @@
+{
+  "body": "<!--\nFixed headings: tools/dev-loop parses them. Keep every \"##\" heading as it is.\n-->\n\n## User story\n\nAs an operator, I want an expired session to ask me to confirm my passkey again, so that I can keep working.\n\n## Acceptance criteria\n\n<!-- Numbered 1, 2, 3... -->\n\n1. When the session has expired, the next company-management action shows the re-authentication dialog.\n2. The session endpoint answers 401 after the session has expired.\n\n## Area\n\n<!-- One area slug. -->\n\nauth\n\n## Roles involved\n\n- operator\n\n## Out of scope\n\n- None.\n\n## Links\n\n- None.\n",
+  "labels": [
+    {
+      "id": "LA_kwDOexample1",
+      "name": "test-request",
+      "description": "What to test: starts one dev-loop run",
+      "color": "0e8a16"
+    },
+    {
+      "id": "LA_kwDOexample2",
+      "name": "area:auth",
+      "description": "The auth area",
+      "color": "1d76db"
+    }
+  ],
+  "number": 12,
+  "state": "OPEN",
+  "title": "Session expiry and the re-auth dialog",
+  "url": "https://github.com/qa-owner/tclock-qa-automation/issues/12"
+}

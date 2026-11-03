@@ -1,0 +1,48 @@
+{
+  "request": null,
+  "plan": ".plan/002-2026-10-16-auth-session-expiry.md",
+  "criteria": [
+    { "number": 1, "area": "auth" },
+    { "number": 2, "area": "auth" },
+    { "number": 3, "area": "auth" },
+    { "number": 4, "area": "auth" }
+  ],
+  "frameworkNeeded": true,
+  "tasks": [
+    {
+      "id": "plan-tests",
+      "agent": "test-planner",
+      "dependsOn": [],
+      "summary": "Explore session expiry and the re-auth dialog; extend the auth test plan and execution plan",
+      "writes": [".doc/sut/auth.md", ".test/auth/test-plan.md", ".test/auth/execution-plan.md"]
+    },
+    {
+      "id": "expire-session",
+      "agent": "framework-architect",
+      "dependsOn": ["plan-tests"],
+      "summary": "A fixture with an operator session that has expired, and the re-auth dialog's confirm and close actions",
+      "writes": ["tests/fixtures.ts", "src/ui/components/re-auth-dialog.ts", "tests/unit/ui/"]
+    },
+    {
+      "id": "ui-cases",
+      "agent": "test-developer-ui",
+      "dependsOn": ["expire-session"],
+      "summary": "Automate the UI cases for criteria 1 to 3",
+      "writes": ["tests/ui/auth/"]
+    },
+    {
+      "id": "api-cases",
+      "agent": "test-developer-api",
+      "dependsOn": ["expire-session"],
+      "summary": "Automate the API case for criterion 4",
+      "writes": ["tests/api/auth/"]
+    },
+    {
+      "id": "review",
+      "agent": "code-reviewer",
+      "dependsOn": ["ui-cases", "api-cases"],
+      "summary": "Review the combined change",
+      "writes": [".orchestrate/review-report.md"]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Hand-written Markdown keeps its own layout: Prettier would re-pad every table and rewrite
+# emphasis, which turns small doc edits into large diffs. The gate parses the tables instead.
+**/*.md
+
+package-lock.json
+.orchestrate/
+.auth/

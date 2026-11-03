@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "playwright-operator": {
+      "command": "node",
+      "args": [
+        "node_modules/@playwright/mcp/cli.js",
+        "--config",
+        ".claude/playwright-mcp/config.json",
+        "--isolated",
+        "--storage-state",
+        ".auth/operator.json",
+        "--allowed-origins",
+        "https://dev.tclock.co.il"
+      ]
+    },
+    "playwright-employee": {
+      "command": "node",
+      "args": [
+        "node_modules/@playwright/mcp/cli.js",
+        "--config",
+        ".claude/playwright-mcp/config.json",
+        "--isolated",
+        "--storage-state",
+        ".auth/employee.json",
+        "--allowed-origins",
+        "https://dev.tclock.co.il"
+      ]
+    }
+  }
+}

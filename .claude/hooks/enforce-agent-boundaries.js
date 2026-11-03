@@ -1,36 +1,34 @@
 #!/usr/bin/env node
-// PreToolUse guardrail: enforces the "Allowed paths" sections already written
-// in .claude/agents/frontend.md, backend.md and qa.md. Those files only *ask*
-// the agent to stay in its lane ("Forbidden: backend/**") - nothing stopped it
-// from ignoring that under bypassPermissions. This hook reads the AGENT_ROLE
-// env var that dev-loop.js sets when it spawns each sub-agent (see
-// runAgent -> spawnClaude in dev-loop.js) and blocks any Edit/Write outside
-// that role's allowed paths.
+// PreToolUse guardrail: per-role write paths for the agents tools/dev-loop spawns.
+// The driver sets AGENT_ROLE for every agent it runs, the orchestrator included. This hook
+// blocks any Edit/Write/NotebookEdit outside that role's lane, and any Bash command that
+// writes to an owner-only path. The lanes live in ./lib/role-write-paths.js, which the
+// driver also uses to check each stage's changed files.
 //
-// Wired up in .claude/settings.json. Sitting in .claude/hooks/ does not register
-// a hook — only the settings.json "hooks" block does. An unlisted script here
+// No AGENT_ROLE (the owner's own session) → not this hook's job.
+// An AGENT_ROLE the lane map does not know → blocked: fail closed, never open.
+//
+// Wired up in .claude/settings.json. A script in .claude/hooks/ that is not listed there
 // never runs.
-//
-// Orchestrator runs (no AGENT_ROLE set) and interactive sessions are
-// left unrestricted by this hook on purpose.
 
-// ESM: the root package.json sets "type": "module", so .js here is ESM.
-import path from 'path'
+import path from 'node:path'
+import { checkWrite, NO_ROLE_WRITES, KNOWN_ROLES, toRepoRelative } from './lib/role-write-paths.js'
 
-const ALLOWED_WRITE_PREFIXES = {
-  frontend: ['frontend/', '.orchestrate/api-contract.yaml', '.orchestrate/frontend-agent-report.md'],
-  backend: ['backend/', '.orchestrate/backend-agent-report.md'],
-  // QA writes its report plus tests — it may add coverage but never feature source.
-  qa: ['.orchestrate/qa-report.md', 'frontend/tests/', 'frontend/e2e/', 'tests/']
-}
+const PATH_FIELDS = ['file_path', 'notebook_path']
+
+// Shell operations that create, change or delete files. `2>&1` and `>&2` are only stream
+// redirects, so they are stripped before this test.
+const SHELL_WRITE =
+  /(>{1,2})|\b(tee|sed\s+-i|perl\s+-pi|cp|mv|rm|rmdir|touch|mkdir|ln|truncate|dd|install|git\s+(checkout|restore|rm|mv|apply)|set-content|add-content|out-file|new-item|remove-item|copy-item|move-item)\b/i
 
 let input = ''
-process.stdin.on('data', chunk => { input += chunk })
+process.stdin.on('data', chunk => {
+  input += chunk
+})
 process.stdin.on('end', () => {
   const role = process.env.AGENT_ROLE
-  const allowedPrefixes = role && ALLOWED_WRITE_PREFIXES[role]
-  if (!allowedPrefixes) {
-    process.exit(0) // no role set (orchestrator / interactive) - not this hook's job
+  if (!role) {
+    process.exit(0)
   }
 
   let payload
@@ -40,35 +38,53 @@ process.stdin.on('end', () => {
     process.exit(0)
   }
 
-  const rawPath = payload?.tool_input?.file_path ?? ''
+  const toolInput = payload?.tool_input ?? {}
+  const projectRoot = payload?.cwd || process.cwd()
+
+  if (!KNOWN_ROLES.includes(role)) {
+    block(`unknown AGENT_ROLE "${role}". Known roles: ${KNOWN_ROLES.join(', ')}`)
+  }
+
+  if (typeof toolInput.command === 'string') {
+    checkShellCommand(role, toolInput.command)
+    process.exit(0)
+  }
+
+  const rawPath = PATH_FIELDS.map(field => toolInput[field]).find(
+    value => typeof value === 'string' && value
+  )
   if (!rawPath) {
     process.exit(0)
   }
 
-  // Claude Code sends an ABSOLUTE file_path, so comparing it directly against
-  // repo-relative prefixes never matches - relativize against the project root
-  // first (payload.cwd when present, otherwise this process's cwd).
-  const projectRoot = payload?.cwd || process.cwd()
-  const filePath = toRepoRelative(rawPath, projectRoot)
-
-  // A write that escapes the repo entirely is out of every role's lane.
-  const escapesRepo = filePath.startsWith('../') || path.isAbsolute(filePath)
-  const isAllowed = !escapesRepo && allowedPrefixes.some(prefix => filePath.startsWith(prefix))
-
-  if (!isAllowed) {
-    console.error(
-      `[guardrail] "${role}" agent tried to write outside its allowed paths: "${filePath}". ` +
-      `Allowed: ${allowedPrefixes.join(', ')}`
-    )
-    process.exit(2)
+  const relPath = toRepoRelative(rawPath, projectRoot, path)
+  const verdict = checkWrite(role, relPath)
+  if (!verdict.allowed) {
+    block(`"${role}" agent may not write here: ${verdict.reason}`)
   }
 
   process.exit(0)
 })
 
-function toRepoRelative(rawPath, projectRoot) {
-  const normalized = path.isAbsolute(rawPath)
-    ? path.relative(projectRoot, rawPath)
-    : rawPath
-  return normalized.replace(/\\/g, '/').replace(/^\.\//, '')
+function checkShellCommand(role, command) {
+  const writes = SHELL_WRITE.test(command.replace(/\d*>&\d+/g, ''))
+  if (!writes) return
+
+  const protectedPath = NO_ROLE_WRITES.find(entry => mentionsPath(command, entry))
+  if (protectedPath) {
+    block(
+      `"${role}" agent ran a shell command that writes near the owner-only path "${protectedPath}": ${command}`
+    )
+  }
+}
+
+function mentionsPath(command, entry) {
+  const escaped = entry.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\//g, '[\\\\/]')
+  const pattern = new RegExp(`(^|[\\s"'=(]|\\.[\\\\/])${escaped}`, 'i')
+  return pattern.test(command)
+}
+
+function block(message) {
+  console.error(`[guardrail] ${message}`)
+  process.exit(2) // exit code 2 = block the tool call
 }

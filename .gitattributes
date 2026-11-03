@@ -1,0 +1,7 @@
+# Prettier and the gate expect LF everywhere, whatever core.autocrlf says.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.xlsx binary

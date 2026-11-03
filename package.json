@@ -1,0 +1,55 @@
+{
+  "name": "tclock-qa-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-orchestrated QA automation for TClock: TypeScript + Playwright Test, with a deterministic multi-agent loop",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:unit": "vitest run",
+    "test:setup": "playwright test --project=setup",
+    "test:smoke": "playwright test --project=ui --project=api --project=e2e --grep @smoke --grep-invert @quarantine",
+    "test:area": "playwright test --project=ui --project=api --project=e2e --grep-invert @quarantine",
+    "test:regression": "playwright test --project=ui --project=api --project=e2e --grep-invert @quarantine",
+    "auth:enroll": "tsx tools/auth/enroll.ts",
+    "gate": "tsx tools/gates/index.ts",
+    "report": "tsx tools/dev-loop/report.ts",
+    "loop": "tsx tools/dev-loop/index.ts"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.64.1",
+    "dotenv": "^18.0.8",
+    "exceljs": "^4.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.301",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^10.0.1",
+    "@playwright/mcp": "^0.0.83",
+    "@secretlint/secretlint-rule-pattern": "^13.0.7",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.7",
+    "@types/node": "^24.19.2",
+    "allure": "^3.21.0",
+    "allure-playwright": "^3.13.0",
+    "eslint": "^10.12.0",
+    "eslint-plugin-playwright": "^2.12.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10",
+    "secretlint": "^13.0.7",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
+  }
+}

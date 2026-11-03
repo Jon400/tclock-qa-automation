@@ -1,0 +1,12 @@
+[
+  {
+    "name": "gate",
+    "state": "SUCCESS",
+    "link": "https://github.com/qa-owner/tclock-qa-automation/actions/runs/1/job/2"
+  },
+  {
+    "name": "regression",
+    "state": "FAILURE",
+    "link": "https://github.com/qa-owner/tclock-qa-automation/actions/runs/1/job/3"
+  }
+]

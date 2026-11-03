@@ -1,56 +1,56 @@
 ---
 name: writing-plans
-description: Create, revise, or supersede an implementation plan in .plan/. Use whenever the user asks for a plan, an approach, or a design doc for a task, when revising an existing plan after feedback, or when the dev loop asks the orchestrator for a plan. Defines the .plan/ lifecycle, the NNN-YYYY-MM-DD-topic.md filename, required metadata, and the nine required sections.
+description: Create or revise an implementation plan in .plan/. Use whenever the user asks for a plan, an approach or a design doc, when revising a plan after feedback, or when the dev loop asks the orchestrator to scope a test request. Defines the .plan/ lifecycle, the NNN-YYYY-MM-DD-topic.md filename, the metadata and the nine required sections.
 ---
 
 # Writing Plans
 
-`.plan/` at the repository root is the source of truth for plans. `000-backlog.md`
-is the task queue; every other file is a plan.
+`.plan/` says *how we build*. `000-backlog.md` is the queue; every other file is a plan.
+`.test/` says *what we test and how we run it*: a plan links its area's `.test/` files and
+never copies test cases into itself.
 
 ## Before writing anything
-1. Read the existing `.plan/*.md` — do this even when the request names no plan
-   file. A new plan must build on decisions already made, not contradict them.
-2. Read `.doc/product-definition.md` for acceptance criteria and scope.
-3. If `.plan/` does not exist, create it.
+1. Read the existing `.plan/*.md`, even when the request names no plan. A new plan builds on
+   decisions already made and never contradicts them silently.
+2. Read `.doc/product-definition.md` and, for suite work, `.test/master-test-plan.md` and the
+   request (`.orchestrate/request.json` in the dev loop).
 
 ## Filename
-`NNN-YYYY-MM-DD-<topic>.md`, with a sequential numeric prefix — `001`, `002`, `003`.
-Example: `.plan/003-2026-08-03-comment-thread.md`.
+`NNN-YYYY-MM-DD-<topic>.md`, with the next free number: `.plan/002-2026-10-16-auth-session-expiry.md`.
+The dev loop checks the number and the pattern.
 
-## Required metadata
-Near the top of every plan:
+## Metadata
+Near the top:
 
 ```
-Status: draft | active | done | superseded
+Status: draft | active | done
 Owner:
+Request: #<issue> (or "local request")
 Last updated: YYYY-MM-DD
 ```
 
-New plans start as `Status: draft`. Only the human approval gate flips a plan to
-`active`.
+New plans start as `Status: draft`. Only the owner's approval (Gate A in the dev loop) makes a
+plan `active`.
 
 ## Required sections
-Every plan must contain all nine, in this order:
+All nine, in this order:
 
-`Goal` · `Scope` · `Assumptions` · `Open Questions` · `Steps` · `Validation` ·
-`Risks` · `Rollout Order` · `Rollback`
+`Goal` · `Scope` · `Assumptions` · `Open Questions` · `Steps` · `Validation` · `Risks` ·
+`Rollout Order` · `Rollback`
 
 ## Content rules
-- Repository-relative paths only. Never machine-specific absolute paths.
-- Generated artifacts belong in `.orchestrate/`. Never create a `docs/` directory.
-- Respect the task's declared scope. This product is frontend-only with a mock
-  data layer unless the backlog task is explicitly marked `stack:full` — do not
-  plan server work, a database, or a `backend/` tree without that marker.
-- `Validation` is what QA will use as its checklist, so make each item provable
-  by a test or a command.
+- Repository-relative paths only. Generated artifacts belong in `.orchestrate/`. Never create
+  a `docs/` directory.
+- Suite work: `Scope` links the request issue and `.test/<area>/test-plan.md` and
+  `.test/<area>/execution-plan.md`. The test planner owns the cases; the plan names which
+  framework pieces must exist (fixtures, page objects, clients) and who builds them.
+- `Validation` items are commands or tests with a pass/fail result.
+- Follow the rules in `.claude/rules/`, especially `sut-safety.md` and `test-data.md`.
 
 ## Open Questions and approval
-- Ask every plan question **inside the plan file**, not in chat.
-- Make each question easy to answer, and include a recommended answer.
-- Update the plan once answers arrive.
-- Request approval before executing the plan.
+- Ask every question inside the plan, each with a recommended answer.
+- Update the plan when answers arrive, then ask for approval before executing it.
 
-## Superseding a plan
-When a plan is replaced, set the old plan to `Status: superseded` and add a link
-to the replacing plan.
+## Revising a plan
+Rewrite the plan in place. Keep one file per workstream: no superseded copies, and no
+"rewritten" or "earlier draft" notes in the body. Git history keeps the old versions.
