@@ -13,7 +13,7 @@ interface Step {
 interface Workflow {
   on: Record<string, unknown>
   permissions: Record<string, string>
-  jobs: Record<string, { steps: Step[] }>
+  jobs: Record<string, { permissions?: Record<string, string>; steps: Step[] }>
 }
 
 const text = (file: string) =>
@@ -73,6 +73,23 @@ describe('live run workflow', () => {
     expect(names.indexOf('Build the Allure report')).toBeLessThan(
       names.indexOf('Publish JUnit and the Allure report')
     )
+  })
+
+  it('sends only the cleaned report to GitHub Pages', () => {
+    const upload = steps(workflow).find(step =>
+      step.uses?.startsWith('actions/upload-pages-artifact@')
+    )
+
+    expect(upload?.with?.path).toBe('.orchestrate/runs/${{ env.RUN_ID }}/allure-report/')
+    expect(names.indexOf('Build the Allure report')).toBeLessThan(names.indexOf(upload?.name))
+  })
+
+  it('deploys to GitHub Pages from a job with no secrets', () => {
+    const publish = workflow.jobs['publish-report']
+
+    expect(publish?.permissions).toEqual({ pages: 'write', 'id-token': 'write' })
+    expect(JSON.stringify(publish)).not.toContain('secrets.')
+    expect(workflow.jobs['live-run']?.permissions).toBeUndefined()
   })
 
   it('never adds retries', () => {

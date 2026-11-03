@@ -71,5 +71,7 @@ Traces can hold session cookies. They stay local and are never attached to an is
 The live run stays off until the owner sets the repository variable `LIVE_RUNS_ENABLED` to `true`
 and adds the secrets `QA_OPERATOR_PHONE` and `QA_OPERATOR_PASSKEY_B64`, plus `QA_EMPLOYEE_PHONE` and
 `QA_EMPLOYEE_PASSKEY_B64` once that QA user is provisioned. It publishes only JUnit and an Allure
-report built without attachments
-or phone numbers. Traces and screenshots never leave the runner.
+report built without attachments or phone numbers. Traces and screenshots never leave the runner.
+
+The report of the latest live run is public at <https://jon400.github.io/tclock-qa-automation/>,
+and each run's report and JUnit files are kept as an artifact for 14 days.

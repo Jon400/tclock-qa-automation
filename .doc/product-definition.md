@@ -78,4 +78,5 @@ Each criterion is proven by the command or test named with it.
   writes a valid `.orchestrate/request.json`.
 - **AC14 — CI.** `tests/unit/gates/ci-workflows.test.ts` passes: the quality gate workflow holds
   no secrets and names its base branch, and the live run never runs on a pull request, is off
-  until the owner enables it, and publishes only JUnit and the cleaned Allure report.
+  until the owner enables it, publishes only JUnit and the cleaned Allure report, and deploys
+  that report to GitHub Pages from a job with no secrets.
