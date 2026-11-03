@@ -1,0 +1,122 @@
+# The run profiles against dev.tclock.co.il: nightly regression, or a profile on demand.
+# Off until the owner sets the repository variable LIVE_RUNS_ENABLED to true. Never runs on a
+# pull request, so a branch cannot reach the passkeys.
+#
+# This repository is public, so anyone can read the logs and artifacts. Only JUnit and an Allure
+# report built without attachments leave the runner. Traces and screenshots do not.
+name: Live run
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Run profile
+        type: choice
+        options: [regression, smoke]
+        default: regression
+
+permissions:
+  contents: read
+
+# One run at a time: every login raises the passkey's signature counter.
+concurrency:
+  group: live-run
+  cancel-in-progress: false
+
+env:
+  PROFILE: ${{ inputs.profile || 'regression' }}
+
+jobs:
+  live-run:
+    if: vars.LIVE_RUNS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Set the run id
+        run: echo "RUN_ID=$(date -u +%y%m%d-%H%M%S)-$(openssl rand -hex 2)" >> "$GITHUB_ENV"
+      # After npm ci, so no install script ever runs with these in the environment or on disk.
+      # The operator must fail here when missing: the setup project skips a role with no phone.
+      # The employee is optional until that QA user is provisioned; its cases then fail on the
+      # missing session.
+      - name: Restore the QA users' phones and passkeys
+        env:
+          QA_OPERATOR_PHONE: ${{ secrets.QA_OPERATOR_PHONE }}
+          QA_EMPLOYEE_PHONE: ${{ secrets.QA_EMPLOYEE_PHONE }}
+          QA_OPERATOR_PASSKEY_B64: ${{ secrets.QA_OPERATOR_PASSKEY_B64 }}
+          QA_EMPLOYEE_PASSKEY_B64: ${{ secrets.QA_EMPLOYEE_PASSKEY_B64 }}
+        run: |
+          : "${QA_OPERATOR_PHONE:?secret not set}" "${QA_OPERATOR_PASSKEY_B64:?secret not set}"
+          umask 077
+          mkdir -p .auth
+          printf '%s' "$QA_OPERATOR_PASSKEY_B64" | base64 -d > .auth/passkey.operator.json
+          printf 'QA_OPERATOR_PHONE=%s\n' "$QA_OPERATOR_PHONE" > .env
+          if [ -n "$QA_EMPLOYEE_PHONE" ]; then
+            : "${QA_EMPLOYEE_PASSKEY_B64:?secret not set}"
+            printf '%s' "$QA_EMPLOYEE_PASSKEY_B64" | base64 -d > .auth/passkey.employee.json
+            printf 'QA_EMPLOYEE_PHONE=%s\n' "$QA_EMPLOYEE_PHONE" >> .env
+          fi
+      - name: Log in (setup)
+        id: setup
+        run: npm run test:setup
+        env:
+          RUN_STEP: setup
+      - name: Regression
+        if: ${{ env.PROFILE == 'regression' }}
+        run: npm run test:regression -- --no-deps --grep-invert '@quarantine|@serial'
+        env:
+          RUN_STEP: regression
+      - name: Regression (serial)
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && env.PROFILE == 'regression' }}
+        run: npm run test:regression -- --no-deps --grep @serial --workers=1 --pass-with-no-tests
+        env:
+          RUN_STEP: regression-serial
+      - name: Smoke
+        if: ${{ env.PROFILE == 'smoke' }}
+        run: npm run test:smoke -- --no-deps --grep-invert '@quarantine|@serial'
+        env:
+          RUN_STEP: smoke
+      - name: Smoke (serial)
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && env.PROFILE == 'smoke' }}
+        run: npm run test:smoke -- --no-deps --grep '(?=.*@smoke)(?=.*@serial)' --workers=1 --pass-with-no-tests
+        env:
+          RUN_STEP: smoke-serial
+      # Attachments hold screenshots and traces. Log masking does not reach artifacts, and
+      # Playwright's step titles can carry a filled-in phone number, so those are replaced too.
+      - name: Remove attachments and phone numbers from the results
+        if: ${{ !cancelled() }}
+        env:
+          QA_OPERATOR_PHONE: ${{ secrets.QA_OPERATOR_PHONE }}
+          QA_EMPLOYEE_PHONE: ${{ secrets.QA_EMPLOYEE_PHONE }}
+        run: |
+          run_dir=".orchestrate/runs/$RUN_ID"
+          [ -d "$run_dir" ] || exit 0
+          find "$run_dir" -type f -path '*/allure-results/*-attachment*' -delete
+          for phone in "$QA_OPERATOR_PHONE" "$QA_EMPLOYEE_PHONE"; do
+            [ -z "$phone" ] && continue
+            find "$run_dir" -type f \( -path '*/allure-results/*' -o -name junit.xml \) -exec \
+              sed -i "s/$phone/[phone]/g" {} +
+          done
+      - name: Build the Allure report
+        if: ${{ !cancelled() }}
+        run: '[ ! -d ".orchestrate/runs/$RUN_ID/allure-results" ] || npm run report -- --run "$RUN_ID"'
+      - name: Publish JUnit and the Allure report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: live-run-${{ env.PROFILE }}-${{ env.RUN_ID }}
+          path: |
+            .orchestrate/runs/${{ env.RUN_ID }}/*/junit.xml
+            .orchestrate/runs/${{ env.RUN_ID }}/allure-report/
+          include-hidden-files: true
+          retention-days: 14

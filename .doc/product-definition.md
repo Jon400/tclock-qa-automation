@@ -32,9 +32,10 @@ QA setup has to make those failure modes impossible or visible, not merely disco
 ## Product Scope
 - In scope: the framework (`src/`, `tests/`), the `.test/` lifecycle, the quality gate
   (`tools/gates`), the dev-loop driver (`tools/dev-loop`), the agent definitions, rules, skills
-  and hooks, and test suites for TClock's back office, area by area.
+  and hooks, test suites for TClock's back office, area by area, and CI (GitHub Actions
+  workflows, delivered by the CI backlog item).
 - Out of scope: changes to TClock; load, security or accessibility testing; browsers other than
-  Chromium; platform-admin flows; contact with the TClock team; CI (a backlog item).
+  Chromium; platform-admin flows; contact with the TClock team.
 
 ## Target Users
 - Primary user: the owner, a QA automation engineer, who writes requests, approves the gates
@@ -75,3 +76,6 @@ Each criterion is proven by the command or test named with it.
   `npm run loop -- --prompt "<the auth session-expiry request>"` stops at Gate 0 with a draft
   that parses; after approval the issue carries `test-request` and `area:auth`, and the run
   writes a valid `.orchestrate/request.json`.
+- **AC14 — CI.** `tests/unit/gates/ci-workflows.test.ts` passes: the quality gate workflow holds
+  no secrets and names its base branch, and the live run never runs on a pull request, is off
+  until the owner enables it, and publishes only JUnit and the cleaned Allure report.

@@ -15,7 +15,7 @@ How runs happen. Each area's `execution-plan.md` adds its own front matter on to
 | `setup` | `--project=setup` (`npm run test:setup`) | once at the start of every run | yes: no login, no run |
 | `smoke` | `--grep @smoke` against dev | entry criterion for every area run | yes. Red smoke means the environment is broken and the run stops |
 | `area` | the area's `grep`, then new cases × `newCaseRepeat` | the Test Runner stage | yes, against the area's exit criteria |
-| `regression` | everything except `@quarantine` | before the PR (nightly once CI exists) | yes |
+| `regression` | everything except `@quarantine` | before the PR, and nightly in CI once the owner enables it | yes |
 
 The driver runs `setup` once as its own step, then every profile with `--no-deps`, so
 `--repeat-each` never repeats the login. Tests tagged `@serial` run in a separate
@@ -60,3 +60,16 @@ Every run writes `.orchestrate/runs/<run-id>/` (run id `YYMMDD-HHMMSS-xxxx`):
 | `failures.json` | Every failure with its class (env, flaky, untriaged, test bug, product bug), error and trace path |
 
 Traces can hold session cookies. They stay local and are never attached to an issue.
+
+## CI
+
+| Workflow | When | What it runs |
+|---|---|---|
+| `.github/workflows/quality-gate.yml` | every pull request, and pushes to `main` | `npm run gate` against the base branch. No secrets, no traffic to TClock |
+| `.github/workflows/live-run.yml` | nightly, or on demand with a profile | `setup`, then `regression` or `smoke`, with `@serial` cases in their own `--workers=1` step |
+
+The live run stays off until the owner sets the repository variable `LIVE_RUNS_ENABLED` to `true`
+and adds the secrets `QA_OPERATOR_PHONE` and `QA_OPERATOR_PASSKEY_B64`, plus `QA_EMPLOYEE_PHONE` and
+`QA_EMPLOYEE_PASSKEY_B64` once that QA user is provisioned. It publishes only JUnit and an Allure
+report built without attachments
+or phone numbers. Traces and screenshots never leave the runner.
