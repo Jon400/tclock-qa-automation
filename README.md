@@ -81,7 +81,7 @@ Details: `.doc/architecture.md`.
 | `.doc/` | product definition, SUT overview, architecture, glossary, exploration notes |
 | `tools/gates/`, `tools/dev-loop/`, `tools/auth/` | the quality gate, the loop driver, passkey enrollment (owner-only) |
 | `.claude/` | agents, hooks, rules, skills, Playwright MCP config |
-| `.github/` | test-request and bug-report issue templates, the PR template |
+| `.github/` | test-request and bug-report issue templates, the PR template, the CI workflows |
 | `.orchestrate/` | generated output of runs and the loop (gitignored) |
 
 ## Safety

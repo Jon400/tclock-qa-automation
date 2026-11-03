@@ -48,7 +48,8 @@ the Claude Agent SDK (in `tools/` only), Playwright MCP (test-planner exploratio
 - `tools/`: owner-only. `gates/` (the quality gate), `dev-loop/` (the driver), `auth/enroll.ts`.
 - `.claude/`: `agents/`, `hooks/`, `rules/`, `skills/`, `playwright-mcp/`. `.mcp.json`: one
   Playwright MCP server per QA role, dev origin only.
-- `.github/`: the `test-request` and `bug-report` issue templates and the PR template.
+- `.github/`: the `test-request` and `bug-report` issue templates, the PR template, and the
+  `workflows/` (`quality-gate.yml`, `live-run.yml`).
 
 ## Abstractions to reuse
 | Need | Use |
