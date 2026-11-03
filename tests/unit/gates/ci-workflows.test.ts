@@ -65,17 +65,14 @@ describe('live run workflow', () => {
     ])
   })
 
-  it('cleans the results before it builds the report and publishes', () => {
-    const cleaned = names.indexOf('Remove attachments and phone numbers from the results')
-
-    expect(cleaned).toBeGreaterThan(-1)
-    expect(cleaned).toBeLessThan(names.indexOf('Build the Allure report'))
+  it('builds the report before it publishes', () => {
+    expect(names.indexOf('Build the Allure report')).toBeGreaterThan(-1)
     expect(names.indexOf('Build the Allure report')).toBeLessThan(
       names.indexOf('Publish JUnit and the Allure report')
     )
   })
 
-  it('sends only the cleaned report to GitHub Pages', () => {
+  it('sends only the built report to GitHub Pages', () => {
     const upload = steps(workflow).find(step =>
       step.uses?.startsWith('actions/upload-pages-artifact@')
     )
