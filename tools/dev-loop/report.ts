@@ -4,7 +4,8 @@
 //   npm run report -- --run <id>     a given run
 //   npm run report -- --open         build it, then serve and open it
 //
-// Writes .orchestrate/runs/<run-id>/allure-report. The report stays local.
+// Writes .orchestrate/runs/<run-id>/allure-report. The report stays local; only
+// .github/workflows/live-run.yml publishes one, built without attachments.
 
 import path from 'node:path'
 import { parseArgs } from 'node:util'

@@ -11,7 +11,7 @@ Turn this repository into an AI-orchestrated QA automation project for **TClock*
 (`https://dev.tclock.co.il`), a Hebrew/RTL time-and-attendance back office with passkey login.
 It is a portfolio project, so three things have to work together:
 
-1. **A professional TypeScript + Playwright Test framework.** The repository follows the
+1. **A professional TypeScript + Playwright Tesgt framework.** The repository follows the
    orchestration guide's reference layout (`config/`, `ui/` with a base page, pages and components,
    `api/` with a base client and clients, `utils/`, and `tests/{ui,api,e2e}`). Inside that layout,
    the classes follow the owner's `itac-arena-qa-automation` patterns: the `RestClient` request

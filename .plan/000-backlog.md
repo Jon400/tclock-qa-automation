@@ -29,8 +29,8 @@ Current queue:
 - [ ] access: the role access matrix, role × route and API
 - [ ] public-page: smoke of home, privacy and support
 - [ ] Phase 2: the failure-analyzer agent with the triaging-a-failure and writing-a-bug-report skills, once two areas finish the loop without manual repair
-- [ ] CI: GitHub Actions workflows that call tools/gates and the run profiles, and publish JUnit and the Allure report as artifacts
 
 
 ## DONE
 - [x] Setup
+- [x] CI: GitHub Actions workflows that call tools/gates and the run profiles, and publish JUnit and the Allure report as artifacts
