@@ -1,6 +1,4 @@
-# AI4Dev Agent Files
-
-Repository: [Jon400/AI4Dev-Agent-Files](https://github.com/Jon400/AI4Dev-Agent-Files)
+# TClock QA Automation
 
 AI-orchestrated QA automation for [TClock](https://dev.tclock.co.il), a Hebrew/RTL
 time-and-attendance back office with passkey login.
